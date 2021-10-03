@@ -1,3 +1,4 @@
+import json
 import pyperclip
 from tkinter import *
 from tkinter import messagebox
@@ -20,7 +21,14 @@ def save():
     email = email_entry.get()
     password = password_entry.get()
 
-    data_entry = f"{website} | {email} | {password}\n"
+    # data_entry = f"{website} | {email} | {password}\n"
+
+    new_data = {
+        website: {
+            "email": email,
+            "password": password,
+        }
+    }
 
     if len(website.strip()) == 0:
         messagebox.showwarning("website", "you left the website field blank")
@@ -29,12 +37,28 @@ def save():
     elif len(password.strip()) == 0:
         messagebox.showwarning("password", "you left the password field blank")
     else:
-        is_ok = messagebox.askokcancel(title="website", message=f"These are the details entered: \nEmail: {email}\n"
-                                                                f"Password: {password} \n Is it ok to save?")
-    with open("data.txt", mode="a") as data_file:
-        data_file.write(data_entry)
-        website_entry.delete(0, END)
-        password_entry.delete(0, END)
+        is_ok = messagebox.askokcancel(title="website", message=f"These are the details entered: \nEmail: {email}\n")
+        try:
+            with open("data.json", mode="r") as data_file:
+                # read the data.json if it already exists
+                data = json.load(data_file)
+        except FileNotFoundError:
+            # create new data.json if not already available
+            with open("data.json", mode="w") as data_file:
+                # create a new data.json from the user entered data and save it
+                json.dump(new_data, data_file, indent=4)
+        else:
+            # if data.json already exists with previous values
+            # then update the data with the new entered one
+            data.update(new_data)
+
+            # and save it
+            with open("data.json", mode="w") as data_file:
+                json.dump(data, data_file, indent=4)
+        finally:
+            # finally clear the gui corresponding fields
+            website_entry.delete(0, END)
+            password_entry.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
