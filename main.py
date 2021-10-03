@@ -3,6 +3,7 @@ import pyperclip
 from tkinter import *
 from tkinter import messagebox
 from password_generator import PasswordGenerator
+
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
 password_generator = PasswordGenerator()
@@ -12,6 +13,7 @@ def generate_password():
     new_password = password_generator.generate()
     password_entry.insert(0, new_password)
     pyperclip.copy(new_password)
+
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
@@ -61,6 +63,54 @@ def save():
             password_entry.delete(0, END)
 
 
+# ---------------------------- FIND PASSWORD ------------------------------- #
+
+
+def find_password():
+    website = website_entry.get()
+    email = email_entry.get()
+
+    new_data = {}
+
+    if len(website.strip()) == 0:
+        messagebox.showwarning("website", "you left the website field blank")
+    elif len(email.strip()) == 0:
+        messagebox.showwarning("email", "you left the email field blank")
+    else:
+        try:
+            with open("data.json", mode="r") as data_file:
+                # read the data.json if it already exists
+                data = json.load(data_file)
+        except FileNotFoundError:
+            # create new data.json if not already available
+            with open("data.json", mode="w") as data_file:
+                # create a new data.json from the user entered data and save it
+                json.dump(new_data, data_file, indent=4)
+        else:
+            # if data.json already exists with previous values
+            # then search for the password in data
+
+            try:
+                found_website = data[website]
+            except KeyError:
+                messagebox.showwarning("website", "the corresponding website you are searching for is does not exist")
+            else:
+                try:
+                    found_email = data[website]["email"]
+                except KeyError:
+                    messagebox.showwarning("email",
+                                           "the corresponding email you are searching for is does not exist")
+                else:
+
+                    if found_email == email:
+                        found_password = data[website]["password"]
+                        messagebox.askokcancel(title=found_website,
+                                               message=f"the password is:\n{found_password}")
+                    else:
+                        messagebox.showwarning("email",
+                                               "the corresponding email you are searching for is does not exist for "
+                                               "this website")
+
 # ---------------------------- UI SETUP ------------------------------- #
 
 
@@ -85,8 +135,8 @@ password_label.grid(row=3, column=0)
 
 # Entries
 
-website_entry = Entry(width=35)
-website_entry.grid(row=1, column=1, columnspan=2)
+website_entry = Entry(width=21)
+website_entry.grid(row=1, column=1)
 website_entry.focus()
 
 email_entry = Entry(width=35)
@@ -96,11 +146,13 @@ email_entry.insert(0, "user@email.com")
 password_entry = Entry(width=21)
 password_entry.grid(row=3, column=1)
 
+search_button = Button(text="Search", width=13, command=find_password)
+search_button.grid(row=1, column=2)
+
 generate_password_button = Button(text="Generate Password", command=generate_password)
 generate_password_button.grid(row=3, column=2)
 
 add_button = Button(text="Add", width=36, command=save)
 add_button.grid(row=4, column=1, columnspan=2)
-
 
 window.mainloop()
